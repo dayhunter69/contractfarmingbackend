@@ -1,5 +1,5 @@
 import mysql from 'mysql';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import readline from 'readline';
 

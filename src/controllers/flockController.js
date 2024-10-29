@@ -1,7 +1,10 @@
 import db from '../config/database.js';
-
+import path from 'path';
 // Create a new flock
 export const createFlock = (req, res) => {
+  console.log('Received form data:', req.body);
+  console.log('Received file:', req.file);
+
   const {
     assigned_to,
     Location,
@@ -10,11 +13,17 @@ export const createFlock = (req, res) => {
     nepali_date,
     english_date,
     quantity,
-    image_location,
+    address,
+    corporative_name,
   } = req.body;
 
-  const query = `INSERT INTO flocks (assigned_to, Location, caretaker_farmer, flock_id, nepali_date, english_date, quantity, image_location)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+  const image_location = req.file ? req.file.path : null;
+
+  // Convert quantity to number
+  const quantityNum = parseInt(quantity, 10);
+
+  const query = `INSERT INTO flocks (assigned_to, Location, caretaker_farmer, flock_id, nepali_date, english_date, quantity, image_location, address, corporative_name)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
   db.query(
     query,
@@ -25,22 +34,25 @@ export const createFlock = (req, res) => {
       flock_id,
       nepali_date,
       english_date,
-      quantity,
+      quantityNum,
       image_location,
+      address,
+      corporative_name,
     ],
     (err, result) => {
       if (err) {
+        console.error('Database error:', err);
         res.status(500).send({ message: err.message });
       } else {
         res.status(201).send({
           message: 'Flock created successfully',
           flockId: result.insertId,
+          image_location: image_location,
         });
       }
     }
   );
 };
-
 // Get all flocks
 export const getFlock = (req, res) => {
   const userRole = req.userRole;

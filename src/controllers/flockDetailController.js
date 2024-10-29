@@ -1,7 +1,10 @@
+// flockDetailController.js
 import db from '../config/database.js';
 
-// Create a new flock detail
 export const createFlockDetail = (req, res) => {
+  console.log('Received form data:', req.body);
+  console.log('Received files:', req.files);
+
   const {
     nepali_date,
     english_date,
@@ -9,6 +12,9 @@ export const createFlockDetail = (req, res) => {
     age_days,
     num_birds,
     mortality_birds,
+    number_of_birds_sold, // Add default values for these fields
+    net_weight_sold,
+    price_per_kg,
     bps_stock,
     b1_stock,
     b2_stock,
@@ -17,15 +23,24 @@ export const createFlockDetail = (req, res) => {
     b2_consumption,
     mortality_reason,
     medicine,
-    image_mortality,
     flock_id,
   } = req.body;
 
+  // Get image paths, handling both file uploads and direct path strings
+  const image_mortality =
+    req.files?.['image_mortality']?.[0]?.path ||
+    req.body.image_mortality ||
+    null;
+  const feed_image =
+    req.files?.['feed_image']?.[0]?.path || req.body.feed_image || null;
+  const field_image =
+    req.files?.['field_image']?.[0]?.path || req.body.field_image || null;
+
   const query = `INSERT INTO flock_detail 
-                 (nepali_date, english_date, location, age_days, num_birds, mortality_birds, 
+                 (nepali_date, english_date, location, age_days, num_birds, mortality_birds, number_of_birds_sold, net_weight_sold, price_per_kg, 
                   bps_stock, b1_stock, b2_stock, bps_consumption, b1_consumption, b2_consumption, 
-                  mortality_reason, medicine, image_mortality, flock_id)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                  mortality_reason, medicine, image_mortality, flock_id, feed_image, field_image)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
   db.query(
     query,
@@ -36,6 +51,9 @@ export const createFlockDetail = (req, res) => {
       age_days,
       num_birds,
       mortality_birds,
+      number_of_birds_sold, // Add this
+      net_weight_sold, // Add this
+      price_per_kg, // Add this
       bps_stock,
       b1_stock,
       b2_stock,
@@ -46,9 +64,12 @@ export const createFlockDetail = (req, res) => {
       medicine,
       image_mortality,
       flock_id,
+      feed_image,
+      field_image,
     ],
     (err, result) => {
       if (err) {
+        console.error('Database error:', err);
         res.status(500).send({ message: err.message });
       } else {
         res.status(201).send({
@@ -60,7 +81,6 @@ export const createFlockDetail = (req, res) => {
   );
 };
 
-// Get all flock details
 export const getFlockDetails = (req, res) => {
   const query = 'SELECT * FROM flock_detail';
 
@@ -73,7 +93,6 @@ export const getFlockDetails = (req, res) => {
   });
 };
 
-// Get a specific flock detail by flock_id
 export const getFlockDetailById = (req, res) => {
   const flock_id = req.params.id;
 
