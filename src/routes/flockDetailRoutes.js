@@ -6,7 +6,12 @@ import {
   createFlockDetail,
   getFlockDetails,
   getFlockDetailById,
+  updateFlockDetail,
+  deleteFlockDetail,
+  getsingleFlockDetailById,
 } from '../controllers/flockDetailController.js';
+import { checkRole } from '../middleware/roleCheck.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,6 +44,21 @@ router.post(
 );
 
 router.get('/', getFlockDetails);
+// THis routes gets all flock detail matching the flock_id
 router.get('/:id', getFlockDetailById);
+// This routes gets the single flock detail matching the flock_detail_id
+router.get('/singledetail/:id', getsingleFlockDetailById);
+router.put(
+  '/:id',
+  authenticateToken,
+  upload.fields([
+    { name: 'image_mortality', maxCount: 1 },
+    { name: 'feed_image', maxCount: 1 },
+    { name: 'field_image', maxCount: 1 },
+  ]),
+  checkRole([0, 1]),
+  updateFlockDetail
+);
 
+router.delete('/:id', authenticateToken, checkRole([0, 1]), deleteFlockDetail);
 export default router;

@@ -4,16 +4,19 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import fs from 'fs';
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 import {
   createFlock,
+  deleteFlock,
   getFlock,
   getFlockById,
+  updateFlock,
+  updateFlockCum,
 } from '../controllers/flockController.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { checkRole } from '../middleware/roleCheck.js';
 
 const router = express.Router();
 
@@ -46,6 +49,23 @@ router.get(
   },
   getFlock
 );
-router.get('/:id', authenticateToken, getFlockById);
+router.get(
+  '/:id',
+  authenticateToken,
+  (req, res, next) => {
+    req.userRole = Number(req.user.role);
+    next();
+  },
+  getFlockById
+);
 
+router.patch('/updatecum/:id', authenticateToken, updateFlockCum);
+router.put(
+  '/:id',
+  authenticateToken,
+  upload.single('image'),
+  checkRole([0, 1]),
+  updateFlock
+);
+router.delete('/:id', authenticateToken, checkRole([0, 1]), deleteFlock);
 export default router;
