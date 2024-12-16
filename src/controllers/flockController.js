@@ -456,3 +456,23 @@ export const deleteFlock = (req, res) => {
     }
   });
 };
+
+// get flock name and id
+export const getFlockNames = (req, res) => {
+  let query;
+  let queryParams = [];
+  query = `
+  SELECT id, flock_id FROM Flocks; 
+    `;
+  db.query(query, queryParams, (err, results) => {
+    if (err) {
+      res.status(500).send({ message: err.message });
+    } else if (results.length === 0) {
+      res.status(404).send({ message: 'Flock details not found' });
+    } else {
+      // Since this is a single flock, we can return the first (and only) element of the results array
+      const flock = results;
+      res.status(200).send(flock);
+    }
+  });
+};

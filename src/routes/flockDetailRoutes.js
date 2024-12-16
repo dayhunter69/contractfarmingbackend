@@ -9,6 +9,7 @@ import {
   updateFlockDetail,
   deleteFlockDetail,
   getsingleFlockDetailById,
+  getAnalysis,
 } from '../controllers/flockDetailController.js';
 import { checkRole } from '../middleware/roleCheck.js';
 import { authenticateToken } from '../middleware/auth.js';
@@ -48,6 +49,8 @@ router.get('/', getFlockDetails);
 router.get('/:id', getFlockDetailById);
 // This routes gets the single flock detail matching the flock_detail_id
 router.get('/singledetail/:id', getsingleFlockDetailById);
+// This router gets the fcr of a particular flock
+router.get('/getanalysis/:id', authenticateToken, getAnalysis);
 router.put(
   '/:id',
   authenticateToken,

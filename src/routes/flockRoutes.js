@@ -12,6 +12,7 @@ import {
   deleteFlock,
   getFlock,
   getFlockById,
+  getFlockNames,
   updateFlock,
   updateFlockCum,
 } from '../controllers/flockController.js';
@@ -49,6 +50,16 @@ router.get(
   },
   getFlock
 );
+router.get(
+  '/list',
+  authenticateToken,
+  (req, res, next) => {
+    req.userRole = Number(req.user.role);
+    next();
+  },
+  getFlockNames
+);
+
 router.get(
   '/:id',
   authenticateToken,

@@ -185,6 +185,7 @@ export const getFlockDetailById = (req, res) => {
     res.status(200).send(resultsWithGeneratedFCR);
   });
 };
+
 export const getsingleFlockDetailById = (req, res) => {
   const flock_id = req.params.id;
 
@@ -421,5 +422,76 @@ export const deleteFlockDetail = (req, res) => {
         });
       }
     });
+  });
+};
+
+// get dashboard data of particular flock
+
+export const getAnalysis = (req, res) => {
+  const flock_id = req.params.id;
+
+  const query = `
+    WITH FeedConsumption AS (
+      SELECT 
+        fd.*,
+        (SELECT SUM(bps_consumption + b1_consumption + b2_consumption) 
+         FROM flock_detail 
+         WHERE flock_id = fd.flock_id AND age_days <= fd.age_days) AS total_feed_consumption,
+        fd.num_birds * fd.avg_weight / 1000 AS total_weight
+      FROM flock_detail fd
+      WHERE fd.flock_id = ?
+    ),
+    MortalityInfo AS (
+      SELECT 
+        (SELECT num_birds FROM flock_detail WHERE flock_id = ? ORDER BY age_days ASC LIMIT 1) AS total_birds,
+        (SELECT SUM(mortality_birds) FROM flock_detail WHERE flock_id = ?) AS total_deceased
+    )
+    SELECT 
+      (
+        SELECT JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'age_days', age_days,
+            'generated_fcr', 
+              CASE 
+                WHEN total_feed_consumption > 0 AND total_weight > 0 
+                THEN ROUND(total_feed_consumption / total_weight, 6)
+                ELSE 0 
+              END,
+            'avg_weight', avg_weight,
+            'total_feed_consumption', ROUND(total_feed_consumption, 2)
+          )
+        )
+        FROM (
+          SELECT * FROM FeedConsumption
+          WHERE age_days % 7 = 0
+          ORDER BY age_days
+          LIMIT 8
+        ) AS DailyData
+      ) AS analysis,
+      (
+        SELECT JSON_OBJECT(
+          'total_birds', total_birds,
+          'total_deceased', total_deceased
+        )
+        FROM MortalityInfo
+      ) AS mortality
+  `;
+
+  db.query(query, [flock_id, flock_id, flock_id], (err, results) => {
+    if (err) {
+      return res.status(500).send({ message: err.message });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).send({ message: 'Flock details not found' });
+    }
+
+    // Parse the JSON results
+    const finalResult = {
+      analysis: JSON.parse(results[0].analysis),
+      mortality: JSON.parse(results[0].mortality),
+    };
+
+    res.status(200).send(finalResult);
   });
 };
